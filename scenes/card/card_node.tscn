@@ -1,17 +1,36 @@
-[gd_scene load_steps=4 format=3 uid="uid://biy8302fr2vdu"]
+[gd_scene load_steps=7 format=3 uid="uid://biy8302fr2vdu"]
 
 [ext_resource type="Script" uid="uid://b01vv6flc4e00" path="res://scenes/card/card_node.gd" id="1_evwgs"]
-[ext_resource type="Texture2D" uid="uid://oeuushacj5u7" path="res://assets/sprites/icon.svg" id="2_h0sjp"]
+
+[sub_resource type="Gradient" id="Gradient_8c3tf"]
+colors = PackedColorArray(0, 0, 0.756863, 1, 0, 0.74902, 0.415686, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_evwgs"]
+gradient = SubResource("Gradient_8c3tf")
+fill_from = Vector2(0.518349, 1)
+fill_to = Vector2(0.504587, 0)
+
+[sub_resource type="Gradient" id="Gradient_evwgs"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_h0sjp"]
+gradient = SubResource("Gradient_evwgs")
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_s42fv"]
-size = Vector2(128, 214)
+size = Vector2(128, 167)
 
 [node name="CardNode" type="Node2D"]
 script = ExtResource("1_evwgs")
 
+[node name="BackgroundSprite" type="Sprite2D" parent="."]
+position = Vector2(-1.90735e-06, -0.500004)
+scale = Vector2(2, 2.60938)
+texture = SubResource("GradientTexture2D_evwgs")
+
 [node name="CardImage" type="Sprite2D" parent="."]
-scale = Vector2(1, 1.66406)
-texture = ExtResource("2_h0sjp")
+position = Vector2(9.53674e-07, -44.5)
+scale = Vector2(1.75, 1.01563)
+texture = SubResource("GradientTexture2D_h0sjp")
 
 [node name="CardArea" type="Area2D" parent="."]
 
