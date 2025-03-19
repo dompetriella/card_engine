@@ -1,8 +1,14 @@
 extends Node2D
 class_name CardNode
 
+var id: int = 0;
 
-func _on_card_area_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
-	if (event is InputEventMouseButton):
-		if (event.button_index == MOUSE_BUTTON_LEFT && event.pressed):
-			print(self);
+signal card_focused(card)
+signal card_unfocused(card)
+
+func _on_card_area_mouse_entered() -> void:
+	self.card_focused.emit(self);
+	
+
+func _on_card_area_mouse_exited() -> void:
+	self.card_unfocused.emit(self);

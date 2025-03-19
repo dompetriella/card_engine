@@ -14,3 +14,22 @@ config/name="deadmans_deck"
 run/main_scene="uid://bqtegskyhp3e7"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://assets/sprites/icon.svg"
+
+[autoload]
+
+GlobalGroupNames="*res://global/global_group_names.gd"
+
+[debug]
+
+gdscript/warnings/untyped_declaration=1
+gdscript/warnings/unsafe_property_access=1
+gdscript/warnings/unsafe_method_access=1
+gdscript/warnings/return_value_discarded=1
+
+[display]
+
+window/stretch/mode="canvas_items"
+
+[global_group]
+
+CardManager="This is the main node that handles basic hand management like drawing, playing, and discarding"

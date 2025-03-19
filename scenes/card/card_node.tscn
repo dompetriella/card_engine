@@ -1,40 +1,35 @@
-[gd_scene load_steps=7 format=3 uid="uid://biy8302fr2vdu"]
+[gd_scene load_steps=6 format=3 uid="uid://biy8302fr2vdu"]
 
 [ext_resource type="Script" uid="uid://b01vv6flc4e00" path="res://scenes/card/card_node.gd" id="1_evwgs"]
-
-[sub_resource type="Gradient" id="Gradient_8c3tf"]
-colors = PackedColorArray(0, 0, 0.756863, 1, 0, 0.74902, 0.415686, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_evwgs"]
-gradient = SubResource("Gradient_8c3tf")
-fill_from = Vector2(0.518349, 1)
-fill_to = Vector2(0.504587, 0)
+[ext_resource type="Texture2D" uid="uid://ccqx43khlq8sa" path="res://assets/sprites/testing/card_bg-sheet.png" id="2_evwgs"]
 
 [sub_resource type="Gradient" id="Gradient_evwgs"]
-colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0.575002, 0.575002, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_h0sjp"]
 gradient = SubResource("Gradient_evwgs")
+fill_from = Vector2(0.215596, 1)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_s42fv"]
-size = Vector2(128, 167)
+size = Vector2(230, 321)
 
 [node name="CardNode" type="Node2D"]
 script = ExtResource("1_evwgs")
 
+[node name="CardImage" type="Sprite2D" parent="."]
+position = Vector2(3.33786e-06, -76.5)
+scale = Vector2(3, 1.98438)
+texture = SubResource("GradientTexture2D_h0sjp")
+
 [node name="BackgroundSprite" type="Sprite2D" parent="."]
 position = Vector2(-1.90735e-06, -0.500004)
-scale = Vector2(2, 2.60938)
-texture = SubResource("GradientTexture2D_evwgs")
-
-[node name="CardImage" type="Sprite2D" parent="."]
-position = Vector2(9.53674e-07, -44.5)
-scale = Vector2(1.75, 1.01563)
-texture = SubResource("GradientTexture2D_h0sjp")
+texture = ExtResource("2_evwgs")
 
 [node name="CardArea" type="Area2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CardArea"]
+position = Vector2(0, -0.5)
 shape = SubResource("RectangleShape2D_s42fv")
 
-[connection signal="input_event" from="CardArea" to="." method="_on_card_area_input_event"]
+[connection signal="mouse_entered" from="CardArea" to="." method="_on_card_area_mouse_entered"]
+[connection signal="mouse_exited" from="CardArea" to="." method="_on_card_area_mouse_exited"]
