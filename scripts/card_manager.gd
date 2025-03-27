@@ -8,43 +8,63 @@ const DEFAULT_CARD_SCALE: Vector2 = Vector2(0.5, 0.5);\
 const DEFAULT_CARD_Z_INDEX: int = 1;
 const CARD_SELECTED_Z_INDEX: int = 99;
 const CARD_SELECTED_Y_OFFSET: float = -48;
+# in seconds
+const TIME_BEFORE_CARD_IS_DRAGGED: float = 0.5;
 
 @export var first_hand_draw_amount: int = 5;
 
 var is_hovering_over_card: bool = false;
-var click_timer: Timer;
+var drag_timer: float = 0.0;
 
-var card_being_dragged: CardNode;
+var card_clicked_in_memory: CardNode;
 var selected_cards: Array[CardNode];
 var player_hand: Array[CardNode] = [];
+
 
 
 func _ready() -> void:
 	draw_starting_hand()
 	
 func _process(delta: float) -> void:
-	if (card_being_dragged):
-		var mouse_position: Vector2 = get_global_mouse_position();
-		card_being_dragged.position = mouse_position;
+	if (card_clicked_in_memory):
+		drag_timer += delta;
+		if (drag_timer > TIME_BEFORE_CARD_IS_DRAGGED):
+			var mouse_position: Vector2 = get_global_mouse_position();
+			card_clicked_in_memory.position = mouse_position;
 	
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if !event.pressed:
-			var card: CardNode = raycast_check_for_card()
+		if event.pressed:
+			var card: CardNode = raycast_check_for_top_card()
 			if card:
-				if card not in selected_cards:
-					selected_cards.append(card);
-					set_card_as_selected(card);
-				else:
-					selected_cards.erase(card);
-					set_card_as_not_selected(card);
-					update_player_hand_card_positions();
-		#else:
-			#if card_being_dragged:
-				#card_being_dragged = null 
-				#update_player_hand_card_positions();
+				card_clicked_in_memory = card
+				drag_timer = 0.0  # Reset the timer when a card is clicked
 
-func raycast_check_for_card() -> CardNode:
+		else:  # Mouse button released
+			
+			#meaning that we clicked on a card
+			if card_clicked_in_memory:
+				if drag_timer < TIME_BEFORE_CARD_IS_DRAGGED:
+					
+					# Only select/deselect if it wasn't dragged
+					if card_clicked_in_memory not in selected_cards:
+						selected_cards.append(card_clicked_in_memory)
+						set_card_as_selected(card_clicked_in_memory)
+					else:
+						selected_cards.erase(card_clicked_in_memory)
+						set_card_as_not_selected(card_clicked_in_memory)
+					update_player_hand_card_positions()
+				
+				# Reset drag variables after releasing
+				card_clicked_in_memory = null
+				drag_timer = 0.0
+				var swap_card: CardNode = raycast_check_for_top_card();
+				
+					
+				update_player_hand_card_positions();
+					
+
+func raycast_check_for_top_card() -> CardNode:
 	var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state;
 	var parameters: PhysicsPointQueryParameters2D = PhysicsPointQueryParameters2D.new();
 	parameters.position = get_global_mouse_position();
@@ -66,6 +86,32 @@ func raycast_check_for_card() -> CardNode:
 		return highest_z_node
 			
 	return null;
+
+
+# need to check for all cards to swap dragged cards
+#func raycast_check_for_all_cards() -> Array[CardNode]:
+	#var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state;
+	#var parameters: PhysicsPointQueryParameters2D = PhysicsPointQueryParameters2D.new();
+	#parameters.position = get_global_mouse_position();
+	#parameters.collide_with_areas = true;
+	#parameters.collision_mask = 1;
+	#var result: Array[Dictionary] = space_state.intersect_point(parameters);
+	#if (result.size() > 0):  
+		#
+		#var highest_z_node = null  
+		#var highest_z_index = -INF  # Start with the lowest possible value  
+#
+		#for item in result:  
+			#var card_node_check = item.collider  
+			#if card_node_check != null and card_node_check.get_parent() is CardNode:  
+				#var parent_node = card_node_check.get_parent()  
+				#if parent_node.z_index > highest_z_index:  
+					#highest_z_index = parent_node.z_index  
+					#highest_z_node = parent_node  
+#
+		#return highest_z_node
+			#
+	#return null;
 
 func draw_starting_hand() -> void:
 	for i in first_hand_draw_amount:
@@ -92,7 +138,8 @@ func update_player_hand_card_positions() -> void:
 		var total_width: float = (player_hand.size() - 1) * CARD_WIDTH;
 		var viewport: Vector2 = get_viewport().size;
 		var x_center: float = viewport.x / 2;
-		var y_position: float = viewport.y - HAND_Y_OFFSET_MARGIN;
+		var selected_y_offset: float = CARD_SELECTED_Y_OFFSET if player_hand[i] in selected_cards else 0;
+		var y_position: float = viewport.y - HAND_Y_OFFSET_MARGIN + selected_y_offset;
 		var card_x_offset: float = x_center + i * CARD_WIDTH - total_width / 2;
 		var new_position =	Vector2(card_x_offset, y_position);
 		player_hand[i].global_position = new_position;
@@ -105,7 +152,7 @@ func _on_card_is_focused(card: CardNode):
 	
 func _on_card_is_unfocused(card: CardNode):
 	set_card_unfocused_properties(card);
-	var new_card_hovered: CardNode = raycast_check_for_card()
+	var new_card_hovered: CardNode = raycast_check_for_top_card()
 	if (new_card_hovered is CardNode):
 		set_card_focus_properties(new_card_hovered)
 	else:
