@@ -2,6 +2,8 @@ extends Node2D
 class_name CardManager
 
 @export var first_hand_draw_amount: int = 5;
+@onready var draw_coordinates: Marker2D = %DrawCoordinates
+@onready var discard_coordinates: Marker2D = %DiscardCoordinates
 
 const VIEWPORT_HEIGHT = 648;
 const VIEWPORT_WIDTH = 1152;
@@ -16,21 +18,22 @@ const CARD_DRAGGING_Z_INDEX: int = 999;
 const CARD_SELECTED_Y_OFFSET: float = -32;
 # in seconds
 const TIME_BEFORE_CARD_IS_DRAGGED: float = 0.5;
+var drag_timer: float = 0.0;
 
 const FOCUS_TWEEN_DURATION: float = 0.2;
 const SELECTION_TWEEN_DURATION: float = 0.2;
 const DRAG_TWEEN_DURATION: float = 0.2;
 
 var is_hovering_over_card: bool = false;
-var drag_timer: float = 0.0;
 
 var card_clicked_in_memory: CardNode;
 var selected_cards: Array[CardNode];
 var player_hand: Array[CardNode] = [];
+var discard_pile: Array[CardNode] = [];
 	
 
 func _ready() -> void:
-	draw_starting_hand();
+	pass;
 
 func _process(delta: float) -> void:
 	if (card_clicked_in_memory):
@@ -139,17 +142,12 @@ func swap_card_positions(card_one: CardNode, card_two: CardNode) -> void:
 	var temp: CardNode = player_hand[index_one]
 	player_hand[index_one] = player_hand[index_two]
 	player_hand[index_two] = temp
-
-
-func draw_starting_hand() -> void:
-	for i in first_hand_draw_amount:
-		draw_card(i);
 		
-func draw_card(id: int) -> void:
+func draw_card() -> void:
 	var card_node: CardNode = CARD_NODE.instantiate();
 	
 	card_node.scale = DEFAULT_CARD_SCALE;
-	card_node.id = id;
+	card_node.id = randi_range(0, 999);
 	player_hand.append(card_node);
 	
 	# bind focus events
@@ -157,6 +155,21 @@ func draw_card(id: int) -> void:
 	card_node.card_unfocused.connect(_on_card_is_unfocused.bind());
 	
 	self.add_child(card_node);
+	card_node.global_position = draw_coordinates.global_position;
+	card_node.scale = Vector2(0.1, 0.1);
+	var tween = get_tree().create_tween();
+	tween.tween_property(card_node, "scale", DEFAULT_CARD_SCALE, 0.2).set_ease(Tween.EASE_IN);
+	update_player_hand_card_positions();
+
+func discard_card(card: CardNode) -> void:
+	player_hand.erase(card);
+
+	discard_pile.append(card);
+	
+	var tween = get_tree().create_tween();
+	tween.parallel().tween_property(card, "scale", Vector2(0,0), 0.2).set_ease(Tween.EASE_OUT);
+	tween.parallel().tween_property(card, "global_position", discard_coordinates.global_position, 0.2).set_ease(Tween.EASE_OUT);
+
 	update_player_hand_card_positions();
 
 

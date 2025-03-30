@@ -1,0 +1,77 @@
+[gd_scene load_steps=4 format=3 uid="uid://bqtegskyhp3e7"]
+
+[ext_resource type="Script" uid="uid://bnvid8s1y4wli" path="res://scripts/card_manager.gd" id="1_pyidc"]
+[ext_resource type="Script" uid="uid://da7r2qghkfi1g" path="res://testing/discard_card.gd" id="3_vvh5c"]
+
+[sub_resource type="GDScript" id="GDScript_pyidc"]
+script/source = "extends Button
+class_name DrawCard
+
+
+func _on_pressed() -> void:
+	var card_manager: CardManager =  get_tree().get_nodes_in_group(GlobalGroupNames.CARD_MANAGER)[0];
+	card_manager.draw_card();
+	card_manager.update_player_hand_card_positions();
+"
+
+[node name="Main" type="Node"]
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="CardManager" type="Node2D" parent="World" groups=["CardManager"]]
+unique_name_in_owner = true
+script = ExtResource("1_pyidc")
+
+[node name="DrawCoordinates" type="Marker2D" parent="World"]
+unique_name_in_owner = true
+position = Vector2(54, 529)
+
+[node name="DiscardCoordinates" type="Marker2D" parent="World"]
+unique_name_in_owner = true
+position = Vector2(1087, 525)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -316.0
+offset_bottom = 50.0
+grow_horizontal = 0
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/Control/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 2
+
+[node name="DrawCard" type="Button" parent="CanvasLayer/Control/MarginContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+text = "Draw Card"
+script = SubResource("GDScript_pyidc")
+
+[node name="DiscardCard" type="Button" parent="CanvasLayer/Control/MarginContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+text = "Discard Card"
+script = ExtResource("3_vvh5c")
+
+[connection signal="pressed" from="CanvasLayer/Control/MarginContainer/HBoxContainer/DrawCard" to="CanvasLayer/Control/MarginContainer/HBoxContainer/DrawCard" method="_on_pressed"]
+[connection signal="pressed" from="CanvasLayer/Control/MarginContainer/HBoxContainer/DiscardCard" to="CanvasLayer/Control/MarginContainer/HBoxContainer/DiscardCard" method="_on_pressed"]
