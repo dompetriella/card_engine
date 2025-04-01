@@ -3,8 +3,8 @@ class_name CardManager
 
 #update this to window size
 #this is used for all global position math
-const VIEWPORT_HEIGHT = 648;
-const VIEWPORT_WIDTH = 1152;
+@export var viewport_height: float = 648;
+@export var viewport_width: float = 1152;
 
 #this is tied to the card node via UID
 #card node can be moved anywhere in the project this way
@@ -19,14 +19,20 @@ const CARD_DRAGGING_Z_INDEX: int = 999;
 #testing coords for where cards will move to on discard
 @onready var discard_coordinates: Marker2D = %DiscardCoordinates
 
-# need to update this dynamically based on card size
-# and hand area
-const CARD_WIDTH: float = 80;
+@export_category("Hand Constants")
+
+## The amount of cards dealt at start
+@export var starting_deck_number: int = 20;
+
+## The max amount of cards held in hand at one time
+@export var max_hand_size: int = 9;
 
 @export_category("Hand Position")
 ## Offset in pixels of the hand 
 ## from the bottom of the screen
 @export var hand_y_offset_margin: int = 128;
+
+@export var hand_horizontal_percentage = 0.50;
 
 @export_category("Card Properties")
 ## Adjusts the starting scale of the card without any
@@ -112,10 +118,12 @@ var card_clicked_in_memory: CardNode;
 var selected_cards: Array[CardNode] = [];
 var player_hand: Array[CardNode] = [];
 var discard_pile: Array[CardNode] = [];
-	
+var draw_pile: Array[CardNode] = []
+
+var card_width: float;
 
 func _ready() -> void:
-	pass;
+	create_draw_pile(starting_deck_number);
 
 func _process(delta: float) -> void:
 	if (card_clicked_in_memory):
@@ -231,38 +239,68 @@ func swap_card_positions(card_one: CardNode, card_two: CardNode) -> void:
 	player_hand[index_one] = player_hand[index_two]
 	player_hand[index_two] = temp
 
+func create_draw_pile(number_of_cards: int):
+	for i in range(number_of_cards):
+		var card_node: CardNode = CARD_NODE.instantiate();
+		var random_value: int = randi_range(100,999);
+		card_node.value = random_value;
+		draw_pile.append(card_node);
+
+func add_card_to_draw_pile(card: CardNode):
+	var draw_pile_copy: Array[CardNode] = draw_pile.duplicate();
+	draw_pile_copy.append(card);
+	draw_pile = draw_pile_copy;
 
 func draw_card() -> void:
-	var card_node: CardNode = CARD_NODE.instantiate();
-	
-	card_node.scale = Vector2(default_card_scale, default_card_scale);
-	card_node.id = randi_range(0, 999);
-	player_hand.append(card_node);
-	
-	# bind focus events
-	card_node.card_focused.connect(_on_card_is_focused.bind());
-	card_node.card_unfocused.connect(_on_card_is_unfocused.bind());
-	
-	self.add_child(card_node);
-	if (draw_coordinates != null):
-		card_node.global_position = draw_coordinates.global_position;
-	card_node.scale = Vector2(default_card_scale, default_card_scale) * initial_draw_scale;
-	var tween = get_tree().create_tween();
-	tween.tween_property(card_node, "scale", Vector2(default_card_scale, default_card_scale), draw_animation_duration).set_trans(draw_transition).set_ease(draw_easing);
-	update_player_hand_card_positions();
+	if (player_hand.size() <= max_hand_size):
+		var player_hand_copy: Array[CardNode] = player_hand.duplicate();
+		var draw_pile_copy: Array[CardNode] = draw_pile.duplicate();
+		
+		if (draw_pile_copy.size() > 0):
+			var drawn_card: CardNode = draw_pile_copy[-1];
+			player_hand_copy.append(drawn_card);
+			draw_pile_copy.erase(drawn_card)
+			
+			draw_pile = draw_pile_copy;
+			player_hand = player_hand_copy;
+		
+			drawn_card.card_focused.connect(_on_card_is_focused.bind());
+			drawn_card.card_unfocused.connect(_on_card_is_unfocused.bind());
+			self.add_child(drawn_card);
+			
+			# get size of card collision shape
+			var card_dimensions: Vector2 =  drawn_card.get_card_size();
+			card_width = card_dimensions.x * default_card_scale
+			
+			if (draw_coordinates != null):
+				drawn_card.global_position = draw_coordinates.global_position;
+			drawn_card.scale = Vector2(default_card_scale, default_card_scale) * initial_draw_scale;
+			var tween = get_tree().create_tween();
+			tween.tween_property(drawn_card, "scale", Vector2(default_card_scale, default_card_scale), draw_animation_duration).set_trans(draw_transition).set_ease(draw_easing);
+			update_player_hand_card_positions();
 
 func discard_card(card: CardNode) -> void:
-	player_hand.erase(card);
-	discard_pile.append(card);
-	if (card in selected_cards):
-		selected_cards.erase(card);
-	
-	var discard_location: Vector2 = discard_coordinates.global_position;
-	var tween = get_tree().create_tween();
-	tween.parallel().tween_property(card, "scale", Vector2(0,0), draw_animation_duration).set_trans(draw_transition).set_ease(draw_easing);
-	tween.parallel().tween_property(card, "global_position", discard_location, draw_animation_duration).set_trans(draw_transition).set_ease(draw_easing);
+	var player_hand_copy: Array[CardNode] = player_hand.duplicate()
+	var selected_cards_copy: Array[CardNode] = selected_cards.duplicate()
 
-	update_player_hand_card_positions();
+	player_hand_copy.erase(card)
+	discard_pile.append(card)
+
+	if card in selected_cards_copy:
+		selected_cards_copy.erase(card)
+		
+	card.card_focused.disconnect(_on_card_is_focused);
+	card.card_unfocused.disconnect(_on_card_is_unfocused);
+
+	player_hand = player_hand_copy
+	selected_cards = selected_cards_copy
+
+	var discard_location: Vector2 = discard_coordinates.global_position
+	var tween: Tween = get_tree().create_tween()
+	tween.parallel().tween_property(card, "scale", Vector2(0,0), draw_animation_duration).set_trans(draw_transition).set_ease(draw_easing)
+	tween.parallel().tween_property(card, "global_position", discard_location, draw_animation_duration).set_trans(draw_transition).set_ease(draw_easing)
+
+	update_player_hand_card_positions()
 
 
 #visual manipulation
@@ -270,21 +308,34 @@ func discard_card(card: CardNode) -> void:
 # this is the constant function that calculates where a card should be
 # on the screen after something like a card played, drawn, discarded, etc
 func update_player_hand_card_positions() -> void:
+	var hand_width = viewport_width * hand_horizontal_percentage
+	var card_spacing: float = card_width + (8 * default_card_scale); # Default spacing
+	
+	# Calculate total width of the cards at normal spacing
+	var total_width: float = (player_hand.size() - 1) * card_width
+	
+	# If the total width exceeds the available hand width, adjust spacing
+	if total_width > hand_width and player_hand.size() > 1:
+		card_spacing = hand_width / (player_hand.size() - 1);  # Evenly distribute
+
 	for i in player_hand.size():
-		var total_width: float = (player_hand.size() - 1) * CARD_WIDTH;
-		var viewport: Vector2 = Vector2(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+		var viewport: Vector2 = Vector2(viewport_width, viewport_height);
 		var x_center: float = viewport.x / 2;
 		var selected_y_offset: float = selected_y_offset if player_hand[i] in selected_cards else 0;
 		var y_position: float = viewport.y - hand_y_offset_margin + selected_y_offset;
-		var card_x_offset: float = x_center + i * CARD_WIDTH - total_width / 2;
-		var new_position =	Vector2(card_x_offset, y_position);
-		var tween: Tween = get_tree().create_tween();
-		var card: CardNode = player_hand[i];
-		tween.tween_property(card, "global_position", new_position, manipulation_duration).set_trans(manipulation_transition).set_ease(manipulation_easing);
 		
+		# Use the new adjusted spacing instead of fixed card_width
+		var total_adjusted_width = (player_hand.size() - 1) * card_spacing;
+		var card_x_offset: float = x_center + i * card_spacing - total_adjusted_width / 2;
+		var new_position = Vector2(card_x_offset, y_position);
+		
+		# Tween the movement
+		var tween: Tween = get_tree().create_tween();
+		var card: CardNode = player_hand[i]
+		tween.tween_property(card, "global_position", new_position, manipulation_duration).set_trans(manipulation_transition).set_ease(manipulation_easing);
+	
 		calculate_card_order_z_index();
 	
-
 func calculate_card_order_z_index():
 	for i in range(player_hand.size()):
 		if (player_hand[i] not in selected_cards):

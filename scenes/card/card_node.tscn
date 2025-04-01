@@ -27,7 +27,8 @@ texture = ExtResource("2_evwgs")
 
 [node name="CardArea" type="Area2D" parent="."]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CardArea"]
+[node name="CardCollision" type="CollisionShape2D" parent="CardArea"]
+unique_name_in_owner = true
 position = Vector2(0, -0.5)
 shape = SubResource("RectangleShape2D_s42fv")
 

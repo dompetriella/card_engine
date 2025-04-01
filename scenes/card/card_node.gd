@@ -1,17 +1,21 @@
 extends Node2D
 class_name CardNode
 
-var id: int = 0;
-var is_currently_selected: bool = false;
+var value: int = 0;
 
+@onready var card_collision: CollisionShape2D = %CardCollision
 @onready var card_text: Label = $CardText
 
 signal card_focused(card)
 signal card_unfocused(card)
 
 func _ready() -> void:
-	card_text.text = str(id);
-
+	card_text.text = str(self.value);
+	
+func get_card_size() -> Vector2:
+	var size: Vector2 = card_collision.shape.size;
+	return size;
+	
 func _on_card_area_mouse_entered() -> void:
 	self.card_focused.emit(self);
 	
