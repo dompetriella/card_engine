@@ -1,6 +1,8 @@
 extends Node2D
 class_name CardManager
 
+signal update_action(label: String)
+
 #update this to window size
 #this is used for all global position math
 @export var viewport_height: float = 648;
@@ -153,12 +155,12 @@ func _input(event: InputEvent) -> void:
 					
 					# Only select/deselect if it wasn't dragged
 					if card_clicked_in_memory not in selected_cards:
-						selected_cards.append(card_clicked_in_memory)
+						select_card(card_clicked_in_memory)
 						set_card_as_selected(card_clicked_in_memory)
 						card_clicked_in_memory = null
 						return;
 					else:
-						selected_cards.erase(card_clicked_in_memory)
+						deselect_card(card_clicked_in_memory);
 						set_card_as_not_selected(card_clicked_in_memory);
 						card_clicked_in_memory = null
 						return;
@@ -178,7 +180,17 @@ func _input(event: InputEvent) -> void:
 						swap_card_positions(cards_landed_on[1], cards_landed_on[0]);
 					update_player_hand_card_positions();
 
+func select_card(card: CardNode) -> void:
+	if card not in selected_cards:
+		var selected_cards_copy: Array[CardNode] = selected_cards.duplicate()
+		selected_cards_copy.append(card)
+		selected_cards = selected_cards_copy;
 
+func deselect_card(card: CardNode) -> void:
+	if card in selected_cards:
+		var selected_cards_copy: Array[CardNode] = selected_cards.duplicate()
+		selected_cards_copy.erase(card)
+		selected_cards = selected_cards_copy;
 
 #raycasts
 func raycast_check_for_top_card() -> CardNode:
@@ -245,11 +257,24 @@ func create_draw_pile(number_of_cards: int):
 		var random_value: int = randi_range(100,999);
 		card_node.value = random_value;
 		draw_pile.append(card_node);
+		card_node.scale = Vector2(0, 0);
+		self.add_child(card_node);
 
 func add_card_to_draw_pile(card: CardNode):
 	var draw_pile_copy: Array[CardNode] = draw_pile.duplicate();
 	draw_pile_copy.append(card);
 	draw_pile = draw_pile_copy;
+
+func shuffle_discard_pile_into_draw_pile():
+	var draw_pile_copy: Array[CardNode] = draw_pile.duplicate();
+	var discard_pile_copy: Array[CardNode] = discard_pile.duplicate();
+	
+	for card: CardNode in discard_pile_copy:
+		draw_pile_copy.append(card);
+	discard_pile_copy = [];
+	
+	draw_pile = draw_pile_copy;
+	discard_pile = discard_pile_copy;
 
 func draw_card() -> void:
 	if (player_hand.size() <= max_hand_size):
@@ -266,7 +291,6 @@ func draw_card() -> void:
 		
 			drawn_card.card_focused.connect(_on_card_is_focused.bind());
 			drawn_card.card_unfocused.connect(_on_card_is_unfocused.bind());
-			self.add_child(drawn_card);
 			
 			# get size of card collision shape
 			var card_dimensions: Vector2 =  drawn_card.get_card_size();
@@ -278,6 +302,43 @@ func draw_card() -> void:
 			var tween = get_tree().create_tween();
 			tween.tween_property(drawn_card, "scale", Vector2(default_card_scale, default_card_scale), draw_animation_duration).set_trans(draw_transition).set_ease(draw_easing);
 			update_player_hand_card_positions();
+
+func play_selected_cards():
+	for card: CardNode in player_hand:
+		if (card in selected_cards):
+			await play_card(card);
+	
+	await discard_selected_cards();
+	update_action.emit("");
+
+func play_card(card: CardNode) -> void:
+	var forward_tween: Tween = get_tree().create_tween()
+	
+	card.z_index = CARD_DRAGGING_Z_INDEX;
+	# Move up, scale up, and change color
+	forward_tween.parallel().tween_property(card, "modulate", Color.ORANGE, 0.2)
+	forward_tween.parallel().tween_property(card, "global_position", card.global_position + Vector2(0, -20), 0.2)
+	forward_tween.parallel().tween_property(card, "scale", Vector2(default_card_scale * 1.2, default_card_scale * 1.2), 0.2)
+
+	await forward_tween.finished;
+	
+	update_action.emit(str(card.value));
+
+	await get_tree().create_timer(0.5).timeout;
+
+	var backward_tween: Tween = get_tree().create_tween();
+	
+	card.z_index = CARD_SELECTED_Z_INDEX;
+	backward_tween.parallel().tween_property(card, "global_position", card.global_position + Vector2(0, 20), 0.2);
+	backward_tween.parallel().tween_property(card, "scale", Vector2(default_card_scale, default_card_scale), 0.2);
+	backward_tween.parallel().tween_property(card, "modulate", selection_color, 0.2);
+
+	await backward_tween.finished;
+
+func discard_selected_cards():
+	for card: CardNode in selected_cards:
+		await discard_card(card);
+		await get_tree().create_timer(0.05).timeout
 
 func discard_card(card: CardNode) -> void:
 	var player_hand_copy: Array[CardNode] = player_hand.duplicate()
@@ -291,6 +352,7 @@ func discard_card(card: CardNode) -> void:
 		
 	card.card_focused.disconnect(_on_card_is_focused);
 	card.card_unfocused.disconnect(_on_card_is_unfocused);
+	card.modulate = Color.WHITE;
 
 	player_hand = player_hand_copy
 	selected_cards = selected_cards_copy

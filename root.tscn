@@ -1,22 +1,13 @@
-[gd_scene load_steps=6 format=3 uid="uid://bqtegskyhp3e7"]
+[gd_scene load_steps=9 format=3 uid="uid://bqtegskyhp3e7"]
 
 [ext_resource type="Script" uid="uid://bnvid8s1y4wli" path="res://scripts/card_manager.gd" id="1_pyidc"]
+[ext_resource type="Script" uid="uid://7xlfy14f4xle" path="res://testing/draw_card.gd" id="2_jnlp7"]
 [ext_resource type="Script" uid="uid://uotwyuvi4078" path="res://testing/draw_label.gd" id="3_28aoi"]
 [ext_resource type="Script" uid="uid://da7r2qghkfi1g" path="res://testing/discard_card.gd" id="3_vvh5c"]
+[ext_resource type="Script" uid="uid://cw85ppdckeexh" path="res://testing/play_card.gd" id="3_vyht1"]
 [ext_resource type="Script" uid="uid://dr4msp76uqyp5" path="res://testing/discard_label.gd" id="4_28aoi"]
-
-[sub_resource type="GDScript" id="GDScript_pyidc"]
-script/source = "extends Button
-class_name DrawCard
-
-var card_manager: CardManager;
-
-func _ready() -> void:
-	card_manager = get_tree().get_nodes_in_group(GlobalGroupNames.CARD_MANAGER)[0];
-
-func _on_pressed() -> void:
-	card_manager.draw_card();
-"
+[ext_resource type="Script" uid="uid://yfvhpytmav8t" path="res://testing/shuffle_discard_into_deck.gd" id="4_l8v81"]
+[ext_resource type="Script" uid="uid://36qkhemlovcu" path="res://testing/action_label.gd" id="8_bf3um"]
 
 [node name="Main" type="Node"]
 
@@ -35,7 +26,7 @@ selection_easing = 1
 scale_while_dragging = 0.9
 drag_transition = 9
 drag_easing = 0
-focus_scale = 1.25
+focus_scale = 1.05
 focus_transition = 8
 focus_easing = 1
 selection_color = Color(2.69532e-06, 0.908469, 0.911418, 1)
@@ -84,7 +75,14 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(150, 50)
 layout_mode = 2
 text = "Draw Card"
-script = SubResource("GDScript_pyidc")
+script = ExtResource("2_jnlp7")
+
+[node name="PlayCard" type="Button" parent="CanvasLayer/Control/MarginContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+text = "Play Card"
+script = ExtResource("3_vyht1")
 
 [node name="DiscardCard" type="Button" parent="CanvasLayer/Control/MarginContainer/HBoxContainer"]
 unique_name_in_owner = true
@@ -92,6 +90,13 @@ custom_minimum_size = Vector2(150, 50)
 layout_mode = 2
 text = "Discard Card(s)"
 script = ExtResource("3_vvh5c")
+
+[node name="ShuffleDiscardIntoDeck" type="Button" parent="CanvasLayer/Control/MarginContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+text = "Shuffle Discard Into Deck"
+script = ExtResource("4_l8v81")
 
 [node name="DrawLabel" type="Label" parent="CanvasLayer/Control"]
 layout_mode = 0
@@ -117,5 +122,20 @@ horizontal_alignment = 1
 vertical_alignment = 1
 script = ExtResource("4_28aoi")
 
+[node name="ActionLabel" type="Label" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -169.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("8_bf3um")
+
 [connection signal="pressed" from="CanvasLayer/Control/MarginContainer/HBoxContainer/DrawCard" to="CanvasLayer/Control/MarginContainer/HBoxContainer/DrawCard" method="_on_pressed"]
+[connection signal="pressed" from="CanvasLayer/Control/MarginContainer/HBoxContainer/PlayCard" to="CanvasLayer/Control/MarginContainer/HBoxContainer/PlayCard" method="_on_pressed"]
 [connection signal="pressed" from="CanvasLayer/Control/MarginContainer/HBoxContainer/DiscardCard" to="CanvasLayer/Control/MarginContainer/HBoxContainer/DiscardCard" method="_on_pressed"]
+[connection signal="pressed" from="CanvasLayer/Control/MarginContainer/HBoxContainer/ShuffleDiscardIntoDeck" to="CanvasLayer/Control/MarginContainer/HBoxContainer/ShuffleDiscardIntoDeck" method="_on_pressed"]

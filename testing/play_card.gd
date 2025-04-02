@@ -1,5 +1,5 @@
 extends Button
-class_name DiscardCard
+class_name PlayCard
 
 var card_manager: CardManager;
 
@@ -8,11 +8,11 @@ func _ready() -> void:
 	
 func _process(delta: float) -> void:
 	if (card_manager.selected_cards.size() > 0):
-		self.text = "Discard " + str(card_manager.selected_cards.size()) + " card(s)"
+		self.text = "Play " + str(card_manager.selected_cards.size()) + " card(s)"
 		return;
 	
-	self.text = "[ Discard ]"
+	self.text = "[ Play ]"
 	
 
 func _on_pressed() -> void:
-	card_manager.discard_selected_cards();
+	if (card_manager.selected_cards.size() > 0):	card_manager.play_selected_cards();
