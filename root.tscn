@@ -31,6 +31,7 @@ focus_transition = 8
 focus_easing = 1
 selection_color = Color(2.69532e-06, 0.908469, 0.911418, 1)
 drag_color = Color(0.81736, 0.803387, 7.70092e-07, 1)
+play_color = Color(1, 0.72549, 0.0666667, 1)
 
 [node name="DrawCoordinates" type="Marker2D" parent="World"]
 unique_name_in_owner = true
