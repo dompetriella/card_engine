@@ -81,6 +81,22 @@ var drag_timer: float = 0.0;
 @export var drag_transition: Tween.TransitionType = Tween.TRANS_QUAD;
 @export var drag_easing: Tween.EaseType = Tween.EASE_IN_OUT;
 
+@export_category("Play Card")
+
+## Amount of distance the card moves on the y-axis when played
+@export var play_y_offset: float = -20;
+
+## How long (in seconds) the card waits before moving on to the next card
+@export var play_pause: float = 0.5;
+
+@export_subgroup("Animation")
+
+## Increase in size of card when played
+@export var play_scale: float = 1.2
+
+## Duration (in seconds) for the card to play its animations
+@export var play_duration: float = 0.2;
+
 @export_category("Card Focus")
 
 ## Scale of card while focused
@@ -313,27 +329,28 @@ func play_selected_cards():
 	await discard_selected_cards();
 	update_action.emit("");
 
+
 func play_card(card: CardNode) -> void:
 	var forward_tween: Tween = get_tree().create_tween()
 	
 	card.z_index = CARD_DRAGGING_Z_INDEX;
 	# Move up, scale up, and change color
-	forward_tween.parallel().tween_property(card, "modulate", Color.ORANGE, 0.2)
-	forward_tween.parallel().tween_property(card, "global_position", card.global_position + Vector2(0, -20), 0.2)
-	forward_tween.parallel().tween_property(card, "scale", Vector2(default_card_scale * 1.2, default_card_scale * 1.2), 0.2)
+	forward_tween.parallel().tween_property(card, "modulate", Color.ORANGE, play_duration)
+	forward_tween.parallel().tween_property(card, "global_position", card.global_position + Vector2(0, play_y_offset), play_duration)
+	forward_tween.parallel().tween_property(card, "scale", Vector2(default_card_scale * play_scale, default_card_scale * play_scale), play_duration)
 
 	await forward_tween.finished;
 	
 	update_action.emit(str(card.value));
 
-	await get_tree().create_timer(0.5).timeout;
+	await get_tree().create_timer(play_pause).timeout;
 
 	var backward_tween: Tween = get_tree().create_tween();
 	
 	card.z_index = CARD_SELECTED_Z_INDEX;
-	backward_tween.parallel().tween_property(card, "global_position", card.global_position + Vector2(0, 20), 0.2);
-	backward_tween.parallel().tween_property(card, "scale", Vector2(default_card_scale, default_card_scale), 0.2);
-	backward_tween.parallel().tween_property(card, "modulate", selection_color, 0.2);
+	backward_tween.parallel().tween_property(card, "global_position", card.global_position + Vector2(0, -play_y_offset), play_duration);
+	backward_tween.parallel().tween_property(card, "scale", Vector2(default_card_scale, default_card_scale), play_duration);
+	backward_tween.parallel().tween_property(card, "modulate", selection_color, play_duration);
 
 	await backward_tween.finished;
 
