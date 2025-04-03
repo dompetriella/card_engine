@@ -273,6 +273,8 @@ func shuffle_discard_pile_into_draw_pile():
 		draw_pile_copy.append(card);
 	discard_pile_copy = [];
 	
+	draw_pile_copy.shuffle();
+	
 	draw_pile = draw_pile_copy;
 	discard_pile = discard_pile_copy;
 
