@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="deadmans_deck"
+config/name="card_engine"
 run/main_scene="uid://bqtegskyhp3e7"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://assets/sprites/icon.svg"
