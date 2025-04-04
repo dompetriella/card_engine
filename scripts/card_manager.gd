@@ -87,9 +87,10 @@ signal update_action(label: String)
 
 ## Increase in size of card when played
 @export var play_scale: float = 1.2
-
 ## Duration (in seconds) for the card to play its animations
 @export var play_duration: float = 0.2;
+@export var play_transition: Tween.TransitionType = Tween.TRANS_QUAD;
+@export var play_easing: Tween.EaseType = Tween.EASE_IN_OUT;
 
 @export_category("Card Focus")
 
@@ -449,9 +450,9 @@ func set_card_play_properties(card: CardNode):
 	
 	card.z_index = CARD_DRAGGING_Z_INDEX;
 	# Move up, scale up, and change color
-	forward_tween.parallel().tween_property(card, "modulate", play_color, play_duration)
-	forward_tween.parallel().tween_property(card, "global_position", card.global_position + Vector2(0, play_y_offset), play_duration)
-	forward_tween.parallel().tween_property(card, "scale", Vector2(default_card_scale * play_scale, default_card_scale * play_scale), play_duration)
+	forward_tween.parallel().tween_property(card, "modulate", play_color, play_duration).set_trans(play_transition).set_ease(play_easing);
+	forward_tween.parallel().tween_property(card, "global_position", card.global_position + Vector2(0, play_y_offset), play_duration).set_trans(play_transition).set_ease(play_easing);
+	forward_tween.parallel().tween_property(card, "scale", Vector2(default_card_scale * play_scale, default_card_scale * play_scale), play_duration).set_trans(play_transition).set_ease(play_easing);
 
 	await forward_tween.finished;
 	
@@ -459,9 +460,9 @@ func reverse_card_play_properties(card: CardNode):
 	var backward_tween: Tween = get_tree().create_tween();
 	
 	card.z_index = CARD_SELECTED_Z_INDEX;
-	backward_tween.parallel().tween_property(card, "global_position", card.global_position + Vector2(0, -play_y_offset), play_duration);
-	backward_tween.parallel().tween_property(card, "scale", Vector2(default_card_scale, default_card_scale), play_duration);
-	backward_tween.parallel().tween_property(card, "modulate", selection_color, play_duration);
+	backward_tween.parallel().tween_property(card, "global_position", card.global_position + Vector2(0, -play_y_offset), play_duration).set_trans(play_transition).set_ease(play_easing);;
+	backward_tween.parallel().tween_property(card, "scale", Vector2(default_card_scale, default_card_scale), play_duration).set_trans(play_transition).set_ease(play_easing);;
+	backward_tween.parallel().tween_property(card, "modulate", selection_color, play_duration).set_trans(play_transition).set_ease(play_easing);;
 
 	await backward_tween.finished;
 
